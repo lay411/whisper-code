@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>末班地铁 · 规则怪谈 · 震颤版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* 避免手机长按菜单干扰沉浸感 */
+        }
+
+        body {
+            background: #0a0000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', 'Lucida Sans Typewriter', monospace;
+            padding: 16px;
+        }
+
+        /* 游戏主容器 */
+        .game-container {
+            max-width: 550px;
+            width: 100%;
+            background: #1a0505;
+            background-image: radial-gradient(circle at 10% 20%, #2a0808 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 32px;
+            box-shadow: 0 0 0 2px #5e1a1a, 0 20px 40px rgba(0,0,0,0.6);
+            overflow: hidden;
+            border: 1px solid #b3002d;
+        }
+
+        /* 顶部状态栏: 氛围标题 */
+        .header {
+            background: #0f0000;
+            padding: 18px 20px;
+            border-bottom: 2px solid #b3002d;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #c41e3a;
+            font-size: 1.7rem;
+            letter-spacing: 3px;
+            text-shadow: 0 0 4px #ff0000;
+            font-weight: normal;
+        }
+
+        .header p {
+            color: #aa3e3e;
+            font-size: 0.7rem;
+            margin-top: 6px;
+            font-family: monospace;
+        }
+
+        /* 规则展示区: 已发现的规则会显示在此 */
+        .rules-panel {
+            background: #140202;
+            margin: 16px 16px 8px 16px;
+            padding: 12px 15px;
+            border-radius: 18px;
+            border-left: 6px solid #b5002b;
+            font-size: 0.8rem;
+            color: #e0b3b3;
+            transition: all 0.2s;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .rules-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #ff6b6b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px dashed #942a2a;
+            padding-bottom: 5px;
+        }
+
+        .rules-title span {
+            font-size: 1.2rem;
+        }
+
+        .rules-list {
+            list-style: none;
+            padding-left: 6px;
+        }
+
+        .rules-list li {
+            margin: 8px 0;
+            line-height: 1.35;
+            color: #dfa8a8;
+            font-size: 0.75rem;
+            word-break: break-word;
+            border-left: 2px solid #991f1f;
+            padding-left: 10px;
+        }
+
+        /* 剧情/消息区域 (主要交互输出) */
+        .story-area {
+            background: #0a0101;
+            margin: 8px 16px;
+            padding: 20px 18px;
+            border-radius: 24px;
+            min-height: 280px;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #f0cccc;
+            font-size: 1rem;
+            line-height: 1.5;
+            text-shadow: 0 0 1px darkred;
+            box-shadow: inset 0 0 15px #2f0000, 0 4px 10px black;
+            scroll-behavior: smooth;
+        }
+
+        .story-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .story-text hr {
+            border-color: #7a1f1f;
+            margin: 12px 0;
+        }
+
+        /* 选项按钮区域 */
+        .choices-area {
+            padding: 12px 16px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: #2a0c0c;
+            border: 1.5px solid #b32d2d;
+            color: #ffcece;
+            padding: 12px 18px;
+            border-radius: 60px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: left;
+            transition: 0.1s linear;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+            letter-spacing: 0.5px;
+        }
+
+        .choice-btn:active {
+            background: #6e1b1b;
+            transform: scale(0.97);
+            border-color: #ff5e5e;
+        }
+
+        /* 重置按钮 */
+        .reset-btn {
+            background: #1c0606;
+            border: 1px solid #791919;
+            color: #b37b7b;
+            padding: 8px;
+            margin: 0 16px 20px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            text-align: center;
+            cursor: pointer;
+            font-family: monospace;
+            transition: 0.1s;
+        }
+
+        .reset-btn:active {
+            background: #3a1010;
+            color: #ffb7b7;
+        }
+
+        /* 自定义滚动条 */
+        .story-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .story-area::-webkit-scrollbar-track {
+            background: #2e0a0a;
+        }
+        .story-area::-webkit-scrollbar-thumb {
+            background: #a03636;
+            border-radius: 10px;
+        }
+
+        /* 手机触感优化 */
+        button, .choice-btn {
+            touch-action: manipulation;
+        }
+
+        .blink-red {
+            animation: alertPulse 0.5s ease;
+        }
+
+        @keyframes alertPulse {
+            0% { background-color: #3a0000; border-color: #ff0000; }
+            100% { background-color: #2a0c0c; border-color: #b32d2d; }
+        }
+        
+        /* 震动触发器专用类 (视觉强化震动反馈，同时配合实际api) */
+        .vibrate-effect {
+            animation: shakeBox 0.2s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        
+        @keyframes shakeBox {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-3px, 1px); }
+            40% { transform: translate(3px, -1px); }
+            60% { transform: translate(-2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+    <div class="header">
+        <h1>⛧ 末班地铁 ⛧</h1>
+        <p>23:50 · 禁忌之列 · 震颤诡则</p>
+    </div>
+
+    <!-- 已揭示的规则面板 (动态渲染，只显示角色已确认触碰到的规则) -->
+    <div class="rules-panel" id="rulesPanel">
+        <div class="rules-title">
+            <span>⚠️</span> 已发现的规则
+        </div>
+        <ul class="rules-list" id="rulesList">
+            <li style="color:#8a5a5a;">尚未触达任何规则。黑暗中的条例等待被见证...</li>
+        </ul>
+    </div>
+
+    <div class="story-area" id="storyArea">
+        <div class="story-text" id="storyText">
+            站台的白炽灯管坏了一根，剩下那根嗡嗡地响。<br><br>
+            你站在候车线上，手机显示23:52。末班地铁就要进站。<br>
+            泛黄的告示贴在水泥柱上，字迹有些模糊。但你知道那上面写着什么——<br>
+            <br>
+            “一、23:50之后进站的列车只有一班，请不要询问司机终点站是哪里。<br>
+            二、车厢内若有多于四名乘客，请立即下车。<br>
+            三、不要与穿棕色外套的人对视。<br>
+            四、如果你听到有人叫你的名字，那不是你的同伴。”<br>
+            <br>
+            荒谬吗？可夜风从隧道灌进来，带着陈旧的血锈气味。你发现站台上只有你一人。<br>
+            列车无声地滑入站台……
+        </div>
+    </div>
+
+    <div class="choices-area" id="choicesArea"></div>
+    <div class="reset-btn" id="resetBtn">◉ 迷失循环 · 重启旅程 ◉</div>
+</div>
+
+<script>
+    // ========== 震动反馈封装 (手机专用) ==========
+    function triggerVibration() {
+        // 震动API兼容性检测 且仅在用户触发交互时有效 (浏览器安全策略)
+        if (window.navigator && window.navigator.vibrate) {
+            // 错误选项震动模式: 短促而敲击感 200ms 再微顿双重提醒 更具恐惧感
+            window.navigator.vibrate([80, 50, 80]);
+        }
+        // 视觉震动效果加强反馈，让桌面端也有类似的“错误抖屏”
+        const container = document.getElementById('gameContainer');
+        if (container) {
+            container.classList.add('vibrate-effect');
+            setTimeout(() => {
+                container.classList.remove('vibrate-effect');
+            }, 260);
+        }
+    }
+    
+    // 针对一些特殊的致命/禁忌错误，加重震动 (长时间惊恐震动)
+    function triggerHeavyVibration() {
+        if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate([150, 70, 150, 70, 200]);
+        }
+        const container = document.getElementById('gameContainer');
+        if (container) {
+            container.classList.add('vibrate-effect');
+            setTimeout(() => {
+                container.classList.remove('vibrate-effect');
+            }, 500);
+        }
+    }
+    
+    // ----- 游戏状态管理 (纯文字规则怪谈 + 震动错误惩罚)-----
+    let discoveredRules = [];
+    let gameEnded = false;
+    let currentNodeId = "platform_start";
+    
+    let flags = {
+        lookedAtBrowncoat: false,
+        respondedToName: false,
+        countedPassengers: false,
+        enteredCabinDoor: false,
+        disobeyedRuleExit: false,
+        sawOwnReflectionSmile: false,
+        gotThirteenthPassengerEnd: false,
+        hasShadowBehind: false,
+        seatCountObserved: false
+    };
+    
+    function updateRulesUI() {
+        const rulesListEl = document.getElementById('rulesList');
+        if (!rulesListEl) return;
+        if (discoveredRules.length === 0) {
+            rulesListEl.innerHTML = '<li style="color:#8a5a5a;">尚未触达任何规则。黑暗中的条例等待被见证...</li>';
+            return;
+        }
+        let html = '';
+        discoveredRules.forEach(rule => {
+            html += `<li>✦ ${rule}</li>`;
+        });
+        rulesListEl.innerHTML = html;
+    }
+    
+    function addRule(ruleText) {
+        if (!discoveredRules.includes(ruleText)) {
+            discoveredRules.push(ruleText);
+            updateRulesUI();
+            const panel = document.getElementById('rulesPanel');
+            if(panel) panel.classList.add('blink-red');
+            setTimeout(() => { if(panel) panel.classList.remove('blink-red'); }, 400);
+        }
+    }
+    
+    function displayStory(text, isAppend = false) {
+        const storyDiv = document.getElementById('storyText');
+        if (!storyDiv) return;
+        if (isAppend) {
+            storyDiv.innerHTML += `<br><br>${text}`;
+        } else {
+            storyDiv.innerHTML = text;
+        }
+        const area = document.getElementById('storyArea');
+        if(area) area.scrollTop = area.scrollHeight;
+    }
+    
+    function clearChoices() {
+        const choicesDiv = document.getElementById('choicesArea');
+        if(choicesDiv) choicesDiv.innerHTML = '';
+    }
+    
+    function setChoices(choices) {
+        clearChoices();
+        const choicesDiv = document.getElementById('choicesArea');
+        if (!choicesDiv) return;
+        for (let choice of choices) {
+            const btn = document.createElement('div');
+            btn.className = 'choice-btn';
+            btn.innerText = choice.text;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (gameEnded && choice.text !== '◈ 重新开始') {
+                    displayStory('[列车已经归于寂静。请按下重启。]');
+                    return;
+                }
+                // 如果这是一个【危险/错误选项】, 在调用前尝试震动 (标记为错误选项)
+                if(choice.isDangerous) {
+                    triggerVibration();
+                }
+                // 致命禁忌选项 更加强烈的震动
+                if(choice.isFatal) {
+                    triggerHeavyVibration();
+                }
+                choice.action();
+            });
+            choicesDiv.appendChild(btn);
+        }
+    }
+    
+    function endGame(endingText, isGoodEnding = false) {
+        if (gameEnded) return;
+        gameEnded = true;
+        // 结局没有额外震动 但如果是坏结局增加轻微氛围震动提醒
+        if(!isGoodEnding) {
+            triggerHeavyVibration();
+        }
+        displayStory(`\n\n--- 【结局】 ---\n${endingText}\n---\n列车远去，站台归于虚无。点击「重启旅程」重新上车。`);
+        setChoices([
+            { text: '◈ 重新开始', action: () => resetGame() }
+        ]);
+    }
+    
+    function resetGame() {
+        gameEnded = false;
+        discoveredRules = [];
+        flags = {
+            lookedAtBrowncoat: false,
+            respondedToName: false,
+            countedPassengers: false,
+            enteredCabinDoor: false,
+            disobeyedRuleExit: false,
+            sawOwnReflectionSmile: false,
+            gotThirteenthPassengerEnd: false,
+            hasShadowBehind: false,
+            seatCountObserved: false
+        };
+        currentNodeId = "platform_start";
+        updateRulesUI();
+        const initialText = `站台的白炽灯管坏了一根，剩下那根嗡嗡地响。<br><br>你站在候车线上，手机显示23:52。末班地铁就要进站。<br>泛黄的告示贴在水泥柱上，字迹有些模糊。但你知道那上面写着什么——<br><br>“一、23:50之后进站的列车只有一班，请不要询问司机终点站是哪里。<br>二、车厢内若有多于四名乘客，请立即下车。<br>三、不要与穿棕色外套的人对视。<br>四、如果你听到有人叫你的名字，那不是你的同伴。”<br><br>荒谬吗？可夜风从隧道灌进来，带着陈旧的血锈气味。你发现站台上只有你一人。<br>列车无声地滑入站台……`;
+        document.getElementById('storyText').innerHTML = initialText;
+        loadScene("platform_enter");
+    }
+    
+    function loadScene(sceneId) {
+        if (gameEnded) return;
+        currentNodeId = sceneId;
+        
+        // ************ 站台起点场景 ************
+        if (sceneId === "platform_enter") {
+            displayStory(`列车门打开了，车厢内灯光惨白，靠门处坐着一个穿棕色外套的人，低头看着发光的手机屏幕。<br>站台上告示纸的一角翘起，灯管噼啪闪烁。`);
+            addRule("站台告示第一条: 23:50之后进站的列车只有一班，请不要询问司机终点站是哪里。");
+            setChoices([
+                { text: "🚪 低头走进车厢，远离棕色外套坐下", action: () => loadScene("carriage_sit_down"), isDangerous: false },
+                { text: "👁️ 忍不住看了一眼棕色外套的人 (可能会对视)", action: () => loadScene("browncoat_look"), isDangerous: true, isFatal: true },
+                { text: "📜 仔细阅读告示，尝试看全部内容", action: () => loadScene("read_sign_all"), isDangerous: true }
+            ]);
+        }
+        else if (sceneId === "read_sign_all") {
+            displayStory(`你盯着告示往下看第二行，突然发现告示内容开始扭曲——上面浮现出新的字迹：“灯管闪烁时，闭眼。不数闪了多少次。” 但与此同时你感到身后有脚步声。`);
+            addRule("告示隐秘规则：灯管闪烁时，闭眼。不数闪了多少次。");
+            addRule("站台候车时若出现超过两名乘客，退回楼梯口等待——等待本身是一种有效的中止行为。");
+            setChoices([
+                { text: "⚠️ 快速进入车厢", action: () => loadScene("carriage_sit_down"), isDangerous: false }
+            ]);
+        }
+        else if (sceneId === "browncoat_look") {
+            displayStory(`你的视线和棕色外套的男人对上了。他抬起脸——没有五官，只有一张固定在皮肤上的笑容。他缓缓指向你。`);
+            flags.lookedAtBrowncoat = true;
+            addRule("禁忌：不要与穿棕色外套的人对视。若他已经看向你，看他的鞋。但现在已经来不及了。");
+            endGame("你与不存在之物对视，车厢灯尽数熄灭。黑暗中无数双手将你拖入座椅之下。第二天，监控显示你刷卡进站后再未出站。你将永远成为末班地铁的『第十二个座位』上的阴影。", false);
+        }
+        else if (sceneId === "carriage_sit_down") {
+            displayStory(`你坐在远离棕色外套的角落。列车行驶无声。经过一站，两站，第三站时灯光突然闪烁了一下！<br>你发现车厢里不知不觉多了三个人：一对中年夫妇，一个穿校服的高中生。现在加上你和棕色外套，一共...五个？六个？`);
+            addRule("规则第二条: 车厢内若有多于四名乘客，请立即下车。但『乘客』是否包括你自己？告示没有明写，需要自行判断。");
+            setChoices([
+                { text: "🧠 默数车厢内的人数（计数行为）", action: () => loadScene("count_passengers"), isDangerous: true, isFatal: true },
+                { text: "🚪 立刻起身走向车门，尝试下车", action: () => loadScene("try_exit_carriage"), isDangerous: false },
+                { text: "😶 假装没注意，低头闭眼默念规则", action: () => loadScene("ignore_and_pray"), isDangerous: false }
+            ]);
+        }
+        else if (sceneId === "count_passengers") {
+            displayStory(`你心里默默点数：棕色外套(1)，中年夫妻(2,3)，高中生(4)...加上自己(5)。但忽然发现高中生身后隆起的影子是第六个存在。你数出来了。空气凝固。`);
+            flags.countedPassengers = true;
+            addRule("【绝对禁忌】不要数。不要数人数，不要数站数，不要数秒数。计数行为等价于“命名”，命名的东西会被回应。");
+            addRule("你数的瞬间相当于发出邀请。影子和乘客全部站起凝视你。");
+            endGame("你数了人群。车厢内的所有“乘客”停止了伪装。灯管炸裂，尖啸声中你的轮廓被扭曲的影子取代。从此每个末班地铁上都坐着一个微笑着的“你”。永远无法下车。", false);
+        }
+        else if (sceneId === "try_exit_carriage") {
+            displayStory(`你冲向车门。门在你的站点之前倏然打开！外面不是站台，而是一片漆黑深渊。冷风灌入。身后传来高中生的声音：「林述，别走。」`);
+            addRule("乘车规则：不要走向车门。门会在你的站点打开。如果门在你的站点之前打开了，不要下车。");
+            setChoices([
+                { text: "🚫 不走出去，退回座位", action: () => loadScene("retreat_seat"), isDangerous: false },
+                { text: "💀 踏出车门", action: () => endGame("你踏入虚无，身体化为碎片。值班室的告示多了一行：【又一位乘客离开了规则】", false), isDangerous: true, isFatal: true }
+            ]);
+        }
+        else if (sceneId === "retreat_seat") {
+            displayStory(`你退回座位，灯光重新亮起，那些乘客都安静坐着仿佛什么都没发生。但最后你发现车厢里的棕色外套消失了。取而代之的是门边座位上放着一面小镜子。`);
+            addRule("不要照镜子。列车里没有镜子。如果你在车窗上看到了自己的倒影，那通常不是你的。");
+            setChoices([
+                { text: "🪞 忍不住看镜子里的倒影", action: () => loadScene("mirror_ending"), isDangerous: true, isFatal: true },
+                { text: "😰 挪开目光，等待到站", action: () => loadScene("alight_normally"), isDangerous: false }
+            ]);
+        }
+        else if (sceneId === "mirror_ending") {
+            displayStory(`你望向镜子，里面映出你的脸。那张脸对你笑了，弧度固定。那不是你的表情。倒影开始从镜框向外攀爬。`);
+            flags.sawOwnReflectionSmile = true;
+            endGame("镜像中的存在替代了你。你变成镜中囚徒，永远在末班地铁的玻璃倒影中笑着。窗外每个候车人都能看到你扭曲的微笑。", false);
+        }
+        else if (sceneId === "alight_normally") {
+            displayStory(`列车终于到达你的站点，车门打开时你不再犹豫直接冲出。没回头没奔跑走到闸机口，可闸机外是陌生的街道。你意识到自己迷失在了平行地铁系统。`);
+            addRule("避险规则: 出站后不要看值班室的窗户。窗户上可能贴着新的告示。");
+            setChoices([
+                { text: "🏚️ 看向值班室窗户", action: () => loadScene("look_window_thirteenth"), isDangerous: true },
+                { text: "🚶 快步离开，绝不张望", action: () => endGame("你忍住好奇不再回头，走入黑夜里，找到熟悉的街道。从此你再也不在23:50后坐地铁，但那班列车的规则已经刻在灵魂深处——你活着，但规则仍在凝视。", true), isDangerous: false }
+            ]);
+        }
+        else if (sceneId === "look_window_thirteenth") {
+            displayStory(`值班室窗户贴着一张崭新的告示：“恭喜。你是今天第十三位回来的乘客。但我们的记录显示，这班列车只有十二个座位。”你冷汗直流，再看窗户上映出你身后站着另一个人。`);
+            flags.gotThirteenthPassengerEnd = true;
+            addRule("来自值班室告示：第十三位乘客——这则告示不会出现在同一个乘客面前两次。若是第二次见到，检查身边是否另有人。");
+            endGame("你的影子伸长，掐住了自己的脖子。你意识到自己早已成为第十三把椅子。现实中的你已经消失，变成了规则的一部分。", false);
+        }
+        else if (sceneId === "ignore_and_pray") {
+            displayStory(`你紧闭双眼，未回应任何呼唤。不知过了多久，列车似乎到站。你悄悄睁眼，车厢空荡荡只剩你一人。你安全下车，但经过站台闸机时，余光看见旧告示最后一行出现新的血字：「你没看规则之外的东西，它很满意」`);
+            endGame("你靠谨慎活了下来。但你永远无法忘记那班列车上若有若无的低语。此后你总感觉在倒影里看到另一个自己对你眨眼。活着的代价是无法再照镜子。", true);
+        }
+        else if (sceneId === "enter_cabin") {
+            displayStory(`你冲过昏暗车厢来到驾驶舱前，门开着。里面坐着列车长，他有五官，但是眼睛怪异。「你没有违反规则……不，你计过数吗？」`);
+            addRule("列车长会帮助你，但如果列车长说你“没有遵守规则”，立刻离开驾驶舱。");
+            if(flags.countedPassengers){
+                endGame("列车长叹息说你早已计数，这是不可挽回的。驾驶舱座位突然变成十三个，你被困在列车长旁边的虚位。永远驾驶着循环列车。", false);
+            } else {
+                displayStory(`列车长摇头：“你还没计数，但规则漏洞已经启动。你现在立刻离开，不要回头。”你狂奔出站`);
+                endGame("你逃出地铁站，但总感觉背后有人跟随。回家后你发现日历永远停留在同一天——你并未真正逃离，而是被规则“注意”了。", false);
+            }
+            return;
+        }
+        
+        if(!gameEnded && (!document.getElementById('choicesArea').children.length || document.getElementById('choicesArea').innerHTML === "")){
+            setChoices([{ text:"🔄 陷入迷雾，重新开始", action:()=>resetGame() }]);
+        }
+    }
+    
+    function initGame() {
+        resetGame();
+    }
+    
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        resetGame();
+    });
+    
+    initGame();
+</script>
+</body>
+</html>

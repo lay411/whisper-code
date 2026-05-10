@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WhisperCode · 规则怪谈回响</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1b2838; font-family: 'Motiva Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #c7d5e0; line-height: 1.4; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+        
+        /* 头部（保留原自定义 logo） */
+        .steam-header { background: #171a21; border-bottom: 1px solid #2a2e36; position: sticky; top: 0; z-index: 100; }
+        .header-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 10px 0; gap: 15px; }
+        
+        /* 原自定义 logo 样式 */
+        .custom-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-mark {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #2f1e2a, #1f1020);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(5deg);
+            border: 1px solid #aa6f6f;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .logo-mark i {
+            font-size: 24px;
+            color: #e08080;
+            transform: rotate(-5deg);
+        }
+        .logo-mark::after {
+            content: "⚡";
+            position: absolute;
+            bottom: -6px;
+            right: -8px;
+            font-size: 12px;
+            color: #c79a6e;
+            background: #1b1a2a;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .site-title {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f2e1c0, #cf8b8b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .main-nav { display: flex; gap: 30px; }
+        .main-nav a { color: #c7d5e0; text-decoration: none; font-weight: 500; }
+        .main-nav a:hover { color: white; }
+        .user-area { display: flex; gap: 15px; align-items: center; }
+        .login-btn { background: none; border: 1px solid #5c6f82; padding: 5px 15px; border-radius: 4px; color: #c7d5e0; cursor: pointer; font-weight: bold; }
+        
+        .hero { background: linear-gradient(105deg, #0f1a24, #121d2a); margin: 20px 0 30px; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .hero-content { padding: 50px 45px; }
+        .hero-badge { background: #d9534f; display: inline-block; padding: 4px 14px; border-radius: 30px; font-size: 13px; font-weight: bold; margin-bottom: 18px; }
+        .hero h1 { font-size: 42px; font-weight: 700; margin-bottom: 15px; }
+        .hero p { font-size: 18px; max-width: 550px; margin-bottom: 28px; color: #adc0d4; }
+        .hero-btn { background: #5e9b3c; border: none; padding: 12px 32px; border-radius: 4px; font-weight: bold; color: white; cursor: pointer; }
+        
+        .two-columns { display: flex; gap: 30px; margin: 30px 0 50px; flex-wrap: wrap; }
+        .main-col { flex: 2.8; min-width: 260px; }
+        .sidebar-col { flex: 1.2; min-width: 260px; }
+        .section-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #2c3e50; padding-bottom: 8px; margin: 30px 0 18px; }
+        .section-head h2 { font-size: 22px; font-weight: 600; }
+        .section-head a { font-size: 13px; color: #8f98a0; text-decoration: none; cursor: pointer; }
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 24px; }
+        .game-card { background: #1f2a36; border-radius: 8px; overflow: hidden; cursor: pointer; border: 1px solid #2c3e50; transition: transform 0.2s, box-shadow 0.2s; }
+        .game-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: #2a3e55; border-color: #5a7f9c; }
+        .card-img { background: linear-gradient(145deg, #14212c, #0f1922); height: 130px; display: flex; align-items: center; justify-content: center; font-size: 54px; color: #a0b9ce; }
+        .card-info { padding: 14px; }
+        .card-title { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+        .card-desc { font-size: 12px; color: #8f98a0; margin: 8px 0 10px; height: 32px; overflow: hidden; }
+        .meta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+        .like-btn { background: none; border: none; color: #ffb6c1; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+        .like-btn.liked { color: #ff5e7e; }
+        .free-tag { background: #2c5e2f; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .side-module { background: #16202d; border-radius: 8px; margin-bottom: 28px; border: 1px solid #2c3e50; }
+        .side-header { background: #0f1a24; padding: 12px 16px; border-bottom: 1px solid #2c3e50; font-weight: bold; font-size: 16px; }
+        .side-content { padding: 14px; }
+        .trend-item, .upcoming-item, .active-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #253544; cursor: pointer; }
+        .trend-score { color: #e0c878; font-weight: bold; }
+        .upcoming-date { font-size: 12px; color: #8f98a0; }
+        footer { background: #0f151c; border-top: 1px solid #2c3e50; padding: 30px 0; margin-top: 30px; text-align: center; font-size: 13px; color: #8f98a0; }
+        @media (max-width: 800px) { .game-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); } .hero h1 { font-size: 30px; } }
+    </style>
+</head>
+<body>
+<header class="steam-header">
+    <div class="container header-inner">
+        <div class="custom-logo">
+            <div class="logo-mark"><i class="fas fa-ghost"></i></div>
+            <span class="site-title">WhisperCode</span>
+        </div>
+        <div class="main-nav">
+            <a href="#">商店</a>
+            <a href="#">社区</a>
+        </div>
+        <div class="user-area">
+            <button class="login-btn" id="loginBtn">登录</button>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-badge"><i class="fas fa-skull"></i> 规则怪谈·免费畅玩</div>
+            <h1>「回响档案」<br>倾听低语，探寻禁忌规则</h1>
+            <p>所有网页游戏完全免费，登录后点赞、评论、冲击速通榜。</p>
+            <button class="hero-btn" id="heroExploreBtn">浏览热门游戏</button>
+        </div>
+    </div>
+
+    <div class="two-columns">
+        <div class="main-col">
+            <div class="section-head">
+                <h2><i class="fas fa-fire"></i> 热门怪谈 · 回声高涨</h2>
+                <a id="moreHotLink">浏览全部</a>
+            </div>
+            <div class="game-grid" id="hotGameGrid"></div>
+
+            <div class="section-head">
+                <h2><i class="fas fa-globe"></i> 全部网页游戏 · 免费禁区</h2>
+                <a id="moreAllLink">查看完整目录</a>
+            </div>
+            <div class="game-grid" id="allGameGrid"></div>
+        </div>
+
+        <div class="sidebar-col">
+            <div class="side-module">
+                <div class="side-header"><i class="fas fa-chart-line"></i> 回声热度榜 · 玩家选择</div>
+                <div class="side-content" id="trendingList"></div>
+            </div>
+            <div class="side-module">
+                <div class="side-header"><i class="fas fa-calendar-alt"></i> 新游预告</div>
+                <div class="side-content" id="upcomingList"></div>
+            </div>
+            <div class="side-module">
+                <div class="side-header"><i class="fas fa-trophy"></i> 用户活跃榜</div>
+                <div class="side-content" id="activeUsersList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer><div class="container">© 2025 WhisperCode · 免费网页游戏 | 点赞评论速通即获活跃积分</div></footer>
+
+<script>
+    // ========== 请替换为你的 Supabase 配置 ==========
+    const SUPABASE_URL = 'https://你的项目.supabase.co';
+    const SUPABASE_ANON_KEY = '你的anon公钥';
+    // =============================================
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let games = [];
+    let userLikes = new Set();
+
+    async function loadGames() {
+        const { data, error } = await supabase.from('games').select('*').order('id');
+        if (error) { console.error(error); return; }
+        games = data.map(g => ({
+            id: g.id,
+            title: g.title,
+            icon_emoji: g.icon_emoji || '🎮',
+            desc: g.description,
+            file_path: g.file_path,
+            heat: 0
+        }));
+        const likeCounts = await fetchLikeCounts();
+        games.forEach(g => { g.heat = likeCounts[g.id] || 0; });
+        await fetchUserLikes();
+        renderAll();
+    }
+
+    async function fetchLikeCounts() {
+        const { data, error } = await supabase.from('likes').select('game_id');
+        if (error) return {};
+        const map = {};
+        data.forEach(l => { map[l.game_id] = (map[l.game_id] || 0) + 1; });
+        return map;
+    }
+
+    async function fetchUserLikes() {
+        if (!currentUser) { userLikes.clear(); return; }
+        const { data, error } = await supabase.from('likes').select('game_id').eq('user_id', currentUser.id);
+        if (!error) {
+            userLikes.clear();
+            data.forEach(l => userLikes.add(l.game_id));
+        }
+    }
+
+    async function toggleLike(gameId, btnElement) {
+        if (!currentUser) { alert('请先登录'); showLoginModal(); return; }
+        const isLiked = userLikes.has(gameId);
+        if (isLiked) {
+            const { error } = await supabase.from('likes').delete().eq('user_id', currentUser.id).eq('game_id', gameId);
+            if (!error) {
+                userLikes.delete(gameId);
+                btnElement.classList.remove('liked');
+                btnElement.innerHTML = '<i class="far fa-heart"></i> 点赞';
+                await supabase.rpc('add_points', { p_user_id: currentUser.id, p_points: -1 });
+                updateGameHeat(gameId, -1);
+            }
+        } else {
+            const { error } = await supabase.from('likes').insert({ user_id: currentUser.id, game_id: gameId });
+            if (!error) {
+                userLikes.add(gameId);
+                btnElement.classList.add('liked');
+                btnElement.innerHTML = '<i class="fas fa-heart"></i> 已赞';
+                await supabase.rpc('add_points', { p_user_id: currentUser.id, p_points: 1 });
+                updateGameHeat(gameId, 1);
+            }
+        }
+    }
+
+    function updateGameHeat(gameId, delta) {
+        const game = games.find(g => g.id === gameId);
+        if (game) game.heat = (game.heat || 0) + delta;
+        renderAll();
+    }
+
+    function renderAll() {
+        const hotSorted = [...games].sort((a,b)=>b.heat - a.heat).slice(0,4);
+        document.getElementById('hotGameGrid').innerHTML = hotSorted.map(g => renderGameCard(g)).join('');
+        document.getElementById('allGameGrid').innerHTML = games.map(g => renderGameCard(g)).join('');
+        const trending = [...games].sort((a,b)=>b.heat - a.heat).slice(0,5);
+        document.getElementById('trendingList').innerHTML = trending.map(g => `<div class="trend-item" data-id="${g.id}"><span>${escapeHtml(g.title)}</span><span class="trend-score">🔥 ${g.heat}</span></div>`).join('');
+        attachLikeEvents();
+        attachCardClickEvents();
+        attachTrendingClickEvents();
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    function renderGameCard(game) {
+        const isLiked = userLikes.has(game.id);
+        const likeBtnHtml = isLiked ? '<i class="fas fa-heart"></i> 已赞' : '<i class="far fa-heart"></i> 点赞';
+        return `
+            <div class="game-card" data-id="${game.id}" data-path="${game.file_path || '#'}">
+                <div class="card-img">${game.icon_emoji}</div>
+                <div class="card-info">
+                    <div class="card-title">${escapeHtml(game.title)}</div>
+                    <div class="card-desc">${escapeHtml((game.desc || '').substring(0, 60))}</div>
+                    <div class="meta-row">
+                        <span class="free-tag">免费</span>
+                        <button class="like-btn ${isLiked ? 'liked' : ''}" data-id="${game.id}">${likeBtnHtml}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function attachLikeEvents() {
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.removeEventListener('click', likeHandler);
+            btn.addEventListener('click', likeHandler);
+        });
+    }
+    function likeHandler(e) {
+        e.stopPropagation();
+        const gameId = parseInt(this.dataset.id);
+        toggleLike(gameId, this);
+    }
+
+    function attachCardClickEvents() {
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.removeEventListener('click', cardClickHandler);
+            card.addEventListener('click', cardClickHandler);
+        });
+    }
+    function cardClickHandler(e) {
+        if (e.target.classList.contains('like-btn')) return;
+        const gameId = this.dataset.id;
+        window.location.href = `game.html?id=${gameId}`;
+    }
+
+    function attachTrendingClickEvents() {
+        document.querySelectorAll('.trend-item').forEach(item => {
+            item.removeEventListener('click', trendingClickHandler);
+            item.addEventListener('click', trendingClickHandler);
+        });
+    }
+    function trendingClickHandler(e) {
+        const gameId = this.dataset.id;
+        if (gameId) window.location.href = `game.html?id=${gameId}`;
+    }
+
+    async function loadUpcoming() {
+        const { data, error } = await supabase.from('upcoming_games').select('*').order('release_date', { ascending: true }).limit(5);
+        if (error) return;
+        const html = data.map(g => `<div class="upcoming-item"><span>${escapeHtml(g.title)}</span><span class="upcoming-date">${g.release_date || '待定'}</span></div>`).join('');
+        document.getElementById('upcomingList').innerHTML = html || '暂无预告';
+    }
+
+    async function loadActiveUsers() {
+        const { data, error } = await supabase.from('user_activity').select('user_id, total_points').order('total_points', { ascending: false }).limit(5);
+        if (error) return;
+        const html = data.map(u => `<div class="active-item"><span>用户 ${u.user_id.slice(0,8)}...</span><span>🔥 ${u.total_points || 0} 分</span></div>`).join('');
+        document.getElementById('activeUsersList').innerHTML = html;
+    }
+
+    function showLoginModal() {
+        const email = prompt('请输入邮箱地址：');
+        if (!email) return;
+        const pwd = prompt('请输入密码（至少6位）：');
+        if (!pwd || pwd.length < 6) return alert('密码至少6位');
+        supabase.auth.signUp({ email, password: pwd })
+            .then(({ error }) => {
+                if (error && error.message.includes('already registered')) {
+                    return supabase.auth.signInWithPassword({ email, password: pwd });
+                } else if (error) {
+                    alert('注册失败：' + error.message);
+                    return null;
+                } else {
+                    alert('注册成功，请登录');
+                    return supabase.auth.signInWithPassword({ email, password: pwd });
+                }
+            })
+            .then((result) => {
+                if (result && result.error) alert('登录失败：' + result.error.message);
+                else if (result && result.data?.user) {
+                    currentUser = result.data.user;
+                    document.querySelector('.login-btn').innerText = currentUser.email.slice(0,10)+'…';
+                    fetchUserLikes().then(() => renderAll());
+                }
+            });
+    }
+
+    window.onload = () => {
+        document.getElementById('loginBtn').onclick = showLoginModal;
+        loadGames();
+        loadUpcoming();
+        loadActiveUsers();
+        supabase.auth.onAuthStateChange((_, session) => {
+            currentUser = session?.user || null;
+            if (currentUser) {
+                document.querySelector('.login-btn').innerText = currentUser.email.slice(0,10)+'…';
+                fetchUserLikes().then(() => renderAll());
+            } else {
+                document.querySelector('.login-btn').innerText = '登录';
+                userLikes.clear();
+                renderAll();
+            }
+        });
+        document.getElementById('heroExploreBtn').onclick = () => document.querySelector('.section-head').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('moreHotLink').onclick = () => window.location.href = '#allGameGrid';
+        document.getElementById('moreAllLink').onclick = () => window.location.href = '#allGameGrid';
+    };
+</script>
+</body>
+</html>
