@@ -1,0 +1,14 @@
+{
+  "lastUpdate": "2025-01-15",
+  "updateLog": "本周新增《深夜电梯》规则怪谈",
+  "games": [
+    {
+      "id": 1,
+      "name": "午夜规则·别回头",
+      "desc": "深夜走廊，听见脚步声时请遵循三条规定",
+      "path": "games/midnight_rule.html",
+      "emoji": "🚪",
+      "publishDate": "2025-01-08"
+    }
+  ]
+}

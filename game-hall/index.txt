@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="description" content="WhisperCode - 规则怪谈回响平台，免费网页游戏，社区热度指引最受欢迎的怪谈世界。">
+    <title>WhisperCode · 规则怪谈回响 — 像Steam一样的怪谈平台</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1b2838;
+            font-family: 'Motiva Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #c7d5e0;
+            line-height: 1.4;
+        }
+
+        /* Steam风格核心变量 */
+        :root {
+            --bg-primary: #1b2838;
+            --bg-header: #171a21;
+            --bg-panel: #16202d;
+            --card-bg: #1f2a36;
+            --card-hover: #2a3e55;
+            --accent-green: #5e9b3c;
+            --accent-red: #bf5e5e;
+            --text-light: #e6e6e6;
+            --text-muted: #8f98a0;
+            --border-light: #2c3e50;
+            --gold: #e0a878;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 完全保留原设计的LOGO风格：鬼魂+闪电角标，仅更改文字为WhisperCode */
+        .custom-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-mark {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #2f1e2a, #1f1020);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(5deg);
+            border: 1px solid #aa6f6f;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .logo-mark i {
+            font-size: 24px;
+            color: #e08080;
+            transform: rotate(-5deg);
+        }
+        .logo-mark::after {
+            content: "⚡";
+            position: absolute;
+            bottom: -6px;
+            right: -8px;
+            font-size: 12px;
+            color: #c79a6e;
+            background: #1b1a2a;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .site-title {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f2e1c0, #cf8b8b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* 头部导航 */
+        .rule-header {
+            background-color: var(--bg-header);
+            border-bottom: 1px solid #2a2e36;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            gap: 15px;
+        }
+        .main-nav {
+            display: flex;
+            gap: 28px;
+            font-weight: 500;
+        }
+        .main-nav a {
+            font-size: 15px;
+            transition: color 0.2s;
+            text-decoration: none;
+            color: #c7d5e0;
+        }
+        .main-nav a:hover { color: white; }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .install-btn {
+            background: #3a6b2f;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        .login-btn {
+            background: none;
+            border: 1px solid #5c6f82;
+            padding: 5px 12px;
+            border-radius: 4px;
+            color: #c7d5e0;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .cart-icon { font-size: 20px; cursor: pointer; }
+
+        /* 巨型促销区域 */
+        .hero-banner {
+            background: linear-gradient(105deg, #0f1a24, #121d2a);
+            margin: 20px 0 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        .hero-content {
+            padding: 50px 45px;
+            background-image: radial-gradient(circle at 85% 20%, rgba(94,155,60,0.1) 0%, transparent 70%);
+        }
+        .hero-badge {
+            background: #d9534f;
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 18px;
+        }
+        .hero-content h1 { font-size: 42px; font-weight: 700; margin-bottom: 15px; }
+        .hero-content p { font-size: 18px; max-width: 550px; margin-bottom: 28px; color: #adc0d4; }
+        .hero-btn { background: var(--accent-green); border: none; padding: 12px 32px; border-radius: 4px; font-weight: bold; color: white; cursor: pointer; }
+
+        /* 双栏主布局 */
+        .two-columns {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0 50px;
+            flex-wrap: wrap;
+        }
+        .main-col { flex: 2.8; min-width: 260px; }
+        .sidebar-col { flex: 1.2; min-width: 260px; }
+
+        /* 板块标题 (Steam风格) */
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 8px;
+            margin: 30px 0 18px;
+        }
+        .section-head h2 { font-size: 22px; font-weight: 600; }
+        .section-head a { font-size: 13px; color: var(--text-muted); text-decoration: none;}
+
+        /* 游戏网格 */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 24px;
+        }
+        .game-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+        }
+        .game-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            background: var(--card-hover);
+            border-color: #5a7f9c;
+        }
+        .card-img {
+            background: linear-gradient(145deg, #14212c, #0f1922);
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 54px;
+            color: #a0b9ce;
+        }
+        .card-info { padding: 14px 14px 16px; }
+        .card-title { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+        .card-desc { font-size: 12px; color: var(--text-muted); margin: 8px 0 10px; height: 32px; overflow: hidden; }
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+        }
+        .echo-score { background: #30653b30; border-radius: 20px; padding: 2px 8px; font-size: 12px; }
+        .free-tag { background: #2c5e2f; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+
+        /* 后续板块占位 (手游/端游/IP) */
+        .future-section {
+            background: linear-gradient(145deg, #1a2532, #111a24);
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin: 40px 0 25px;
+            text-align: center;
+            border: 1px dashed #5a7a8e;
+        }
+        .future-section h3 { font-size: 22px; color: #adc6e0; margin-bottom: 8px; }
+        .future-section p { font-size: 14px; color: #8f98a0; }
+        .future-badge { background: #4a6a5e; display: inline-block; padding: 4px 16px; border-radius: 60px; font-size: 13px; margin-top: 12px; }
+
+        /* 侧边栏模块 */
+        .side-module {
+            background: var(--bg-panel);
+            border-radius: 8px;
+            margin-bottom: 28px;
+            border: 1px solid var(--border-light);
+        }
+        .side-header {
+            background: #0f1a24;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .side-content { padding: 14px; }
+        .trend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #253544;
+            padding-bottom: 10px;
+        }
+        .trend-name i { margin-right: 8px; color: var(--accent-green); }
+        .trend-score { color: #e0c878; font-weight: bold; }
+        .friend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .friend-avatar {
+            width: 34px;
+            height: 34px;
+            background: #2c4b6e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 付费支持礼包 (仅唯一付费区，完全自愿) */
+        .premium-card-small {
+            background: #0f1a24;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            text-align: center;
+            border: 1px solid #5e7c5e;
+        }
+        .pay-small-btn {
+            background: #7e4a2e;
+            border: none;
+            padding: 5px 14px;
+            border-radius: 40px;
+            color: white;
+            font-size: 12px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        /* 游戏详情模态框 (打赏功能隐藏于此，主页无打赏文字) */
+        .game-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--bg-panel);
+            width: 90%;
+            max-width: 880px;
+            max-height: 85vh;
+            border-radius: 20px;
+            overflow-y: auto;
+            border: 1px solid #3a5a70;
+        }
+        .modal-header {
+            background: #0f1a24;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+        .close-modal { background: none; border: none; font-size: 28px; color: #ccc; cursor: pointer; }
+        .modal-body { padding: 28px 30px; }
+        .game-detail-icon { font-size: 72px; text-align: center; margin-bottom: 16px; color: var(--gold); }
+        .game-detail-title { font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 18px; }
+        .game-full-desc { background: #0e1922; padding: 16px; border-radius: 16px; margin-bottom: 20px; line-height: 1.5; }
+        .rule-warning { background: #251a1f; border-left: 4px solid #d9534f; padding: 12px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; }
+        /* 打赏礼物区域 (相对低调，只在详情页出现) */
+        .reward-box {
+            background: #0c111c;
+            border-radius: 20px;
+            padding: 18px;
+            margin-top: 16px;
+        }
+        .reward-title { font-size: 18px; font-weight: bold; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+        .gift-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; justify-content: center; }
+        .gift-item {
+            background: #1f2a36;
+            border-radius: 40px;
+            padding: 6px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 13px;
+            border: 1px solid #5b6e7e;
+        }
+        .gift-item.active { background: #5e9b3c; border-color: #ffd966; }
+        .custom-input { background: #0f1922; border: 1px solid #5a6e7e; padding: 6px 10px; border-radius: 30px; width: 120px; }
+        .reward-do-btn { background: #c97e2c; border: none; padding: 8px 24px; border-radius: 60px; font-weight: bold; color: white; width: 100%; margin-top: 12px; cursor: pointer; }
+        .play-modal-btn { background: #30653b; border: none; padding: 8px 24px; border-radius: 40px; margin-top: 20px; color: white; font-weight: bold; cursor: pointer; }
+
+        footer {
+            background: #0f151c;
+            border-top: 1px solid var(--border-light);
+            padding: 30px 0;
+            margin-top: 30px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+
+        @media (max-width: 800px) {
+            .game-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+            .hero-content h1 { font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="rule-header">
+    <div class="container header-inner">
+        <div class="custom-logo">
+            <div class="logo-mark"><i class="fas fa-ghost"></i></div>
+            <span class="site-title">WhisperCode</span>
+        </div>
+        <div class="main-nav">
+            <a href="#">商店</a>
+            <a href="#">社区</a>
+            <a href="#">关于怪谈</a>
+            <a href="#">客服</a>
+            <a href="#" class="install-btn"><i class="fas fa-download"></i> 安装 WhisperCode</a>
+        </div>
+        <div class="nav-actions">
+            <div class="user-buttons">
+                <button class="login-btn">登录</button>
+                <i class="fas fa-shopping-cart cart-icon"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <!-- 英雄区 商业感强 -->
+    <div class="hero-banner">
+        <div class="hero-content">
+            <span class="hero-badge"><i class="fas fa-skull"></i> 规则怪谈·免费畅玩</span>
+            <h1>「回响档案」<br>倾听低语，探寻禁忌规则</h1>
+            <p>所有网页游戏完全免费，自愿支持创作者。社区热度指引最受欢迎的怪谈世界。</p>
+            <button class="hero-btn" id="heroExploreBtn">浏览热门游戏</button>
+        </div>
+    </div>
+
+    <div class="two-columns">
+        <!-- 主栏：网页游戏免费区 + 未来盈利板块占位 -->
+        <div class="main-col">
+            <!-- 热门推荐 / 编辑推荐 (仿Steam) -->
+            <div class="section-head">
+                <h2><i class="fas fa-fire"></i> 热门怪谈 · 回声高涨</h2>
+                <a href="#" id="moreHotLink">浏览全部 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <div class="game-grid" id="hotGameGrid"></div>
+
+            <!-- 全部网页游戏（免费库） -->
+            <div class="section-head">
+                <h2><i class="fas fa-globe"></i> 全部网页游戏 · 免费禁区</h2>
+                <a href="#">查看完整目录 <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="game-grid" id="allGameGrid"></div>
+
+            <!-- 后续盈利板块占位：手游/端游/IP 即将推出，为以后引流 -->
+            <div class="future-section">
+                <h3><i class="fas fa-mobile-alt"></i> 手游禁区 · 即将开启</h3>
+                <p>移动端诡谲体验，沉浸式规则回声 · 敬请期待</p>
+                <div class="future-badge"><i class="fas fa-hourglass-half"></i> 开发中，2025年上线</div>
+            </div>
+            <div class="future-section">
+                <h3><i class="fas fa-desktop"></i> 端游深渊 · 即将降临</h3>
+                <p>大型规则怪谈世界，PC独占 · 高画质回声</p>
+                <div class="future-badge"><i class="fas fa-dragon"></i> 即将开启预约</div>
+            </div>
+            <div class="future-section">
+                <h3><i class="fas fa-crown"></i> IP星界 · 周边与角色</h3>
+                <p>怪谈人物志、吧唧、立牌等衍生产品 · 蓄势待发</p>
+                <div class="future-badge"><i class="fas fa-store"></i> IP商店筹备中</div>
+            </div>
+
+            <!-- 唯一自愿付费支持区块 → 完全自主，不强制，位于底部 -->
+            <div class="premium-card-small">
+                <i class="fas fa-crown" style="color:var(--gold);"></i> 
+                <strong>回声秘典·支持者礼包</strong> 
+                <span style="font-size:12px; display:block;">自愿购买，助力怪谈创作（含独家设定集）</span>
+                <button class="pay-small-btn" id="supportBtn">查看礼包</button>
+            </div>
+        </div>
+
+        <!-- 右侧边栏：社区热度 + 玩家偏好统计 & 讨论 (为后续开发提供数据) -->
+        <div class="sidebar-col">
+            <div class="side-module">
+                <div class="side-header"><i class="fas fa-chart-line"></i> 回声热度榜 · 玩家选择</div>
+                <div class="side-content" id="trendingList"></div>
+            </div>
+            <div class="side-module">
+                <div class="side-header"><i class="fas fa-comments"></i> 社区讨论 · 热门规则推荐</div>
+                <div class="side-content">
+                    <div class="trend-item"><span><i class="fas fa-dog"></i> 动物园诡则续作猜想</span><span class="trend-score">❤️ 234</span></div>
+                    <div class="trend-item"><span><i class="fas fa-eye"></i> 低语观测站隐藏线</span><span class="trend-score">❤️ 189</span></div>
+                    <div class="trend-item"><span><i class="fas fa-book"></i> 守夜人手册合作模式</span><span class="trend-score">❤️ 142</span></div>
+                </div>
+            </div>
+            <div class="side-module">
+                <div class="side-header"><i class="fas fa-users"></i> 回声探求者 · 正在体验</div>
+                <div class="side-content">
+                    <div class="friend-item"><div class="friend-avatar"><i class="fas fa-user-astronaut"></i></div><div><strong>深渊抄写员</strong> 正在游玩《回声档案》</div></div>
+                    <div class="friend-item"><div class="friend-avatar"><i class="fas fa-user-ninja"></i></div><div><strong>无眠者</strong> 刚刚发现了新规则</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container footer-inner">
+        <div><i class="fas fa-ghost"></i> © 2025 WhisperCode · 免费网页游戏 | 打赏仅用于支持创作者，完全自愿</div>
+        <div><a href="#" style="color:#8f98a0;">关于我们</a> | <a href="#">规则协议</a> | <a href="#">创作者支持</a></div>
+    </div>
+</footer>
+
+<!-- 游戏详情模态框 (包含打赏) -->
+<div id="gameModal" class="game-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalGameTitle">游戏详情</h2>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="game-detail-icon" id="modalIcon"></div>
+            <div class="game-detail-title" id="modalFullTitle"></div>
+            <div class="game-full-desc" id="modalFullDesc"></div>
+            <div class="rule-warning" id="modalRuleWarning"></div>
+            <!-- 打赏区 (完全隐藏于详情页，主页无任何打赏文字) -->
+            <div class="reward-box">
+                <div class="reward-title"><i class="fas fa-gift"></i> 支持创作者 · 回声馈赠</div>
+                <div class="gift-row" id="modalGiftList"></div>
+                <div><input type="number" id="customAmount" class="custom-input" placeholder="自定义金额(¥)" min="1"></div>
+                <button class="reward-do-btn" id="doRewardBtn"><i class="fas fa-heart"></i> 自愿打赏 · 回声回响</button>
+                <p style="font-size:11px; margin-top:8px; text-align:center;">所有打赏仅用于鼓励怪谈作者，游戏完全免费</p>
+            </div>
+            <button class="play-modal-btn" id="modalPlayBtn">免费开始游戏</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 游戏数据 (包含热度值用于排行/引流)
+    const gamesLibrary = [
+        { id:0, title:"回声档案·文字规则", icon:"fa-scroll", short:"多结局叙事规则怪谈", desc:"扮演档案管理员，揭开受诅咒的回声记录。包含12种结局，基于选择。", rule:"⚠️ 规则：记录中不可提及真实姓名；出现“它记住了”时勿刷新页面。", gifts:["幽蓝夜灯","血月印章","禁忌书签","神秘符咒"], heat:342 },
+        { id:1, title:"低语观测站", icon:"fa-eye", short:"收集规则碎片，识别虚假低语", desc:"观测站收到不明低语，分辨真伪规则，拼凑隐藏真相。每日随机事件。", rule:"🚨 不要相信连续三次出现的同一条低语；关闭麦克风权限。", gifts:["暗夜萤火","断章碎片","观测者之眼","银质耳麦"], heat:298 },
+        { id:2, title:"守夜人手册·网页版", icon:"fa-book", short:"图书馆规则解谜，多人协作", desc:"沉浸式规则解谜，遵循未知规则生存，多人文本协作。", rule:"🔥 危险规则：如果在书架间听到翻书声，立刻背诵‘门已锁闭’。", gifts:["烛火庇护","古籍残页","守夜人勋章","羊皮卷轴"], heat:210 },
+        { id:3, title:"午夜典籍折页", icon:"fa-moon", short:"短篇怪谈合集", desc:"一系列短篇规则怪谈故事集，暗藏关联线索。", rule:"🌙 读完最后一个故事后不要回头确认脚步声。", gifts:["月光墨水","折页护符","暗影墨囊","午夜书签"], heat:186 },
+        { id:4, title:"动物园怪谈·在线版", icon:"fa-dog", short:"经典规则改编，全结局探索", desc:"基于动物园规则怪谈的互动版，包含4种meta结局。", rule:"🐇 不要凝视白兔；如果你看见兔耳人类，立刻前往大象园区。", gifts:["大象护符","兔子面具","白雾蜡烛","守则铜章"], heat:512 },
+        { id:5, title:"旧神疗养院·序章", icon:"fa-ghost", short:"免费序章，诡异沉浸", desc:"疗养院中的低语，废弃病区探索，气氛诡异。", rule:"🏚️ 遇见蓝裙护士请闭上眼睛并倒退行走。", gifts:["镇静药剂","病历残页","旧神雕像","银色十字架"], heat:267 }
+    ];
+    // 礼物价格映射
+    const giftPrice = { "幽蓝夜灯":6,"血月印章":12,"禁忌书签":8,"神秘符咒":18,"暗夜萤火":5,"断章碎片":10,"观测者之眼":15,"银质耳麦":20,"烛火庇护":8,"古籍残页":12,"守夜人勋章":18,"羊皮卷轴":25,"月光墨水":6,"折页护符":9,"暗影墨囊":14,"午夜书签":7,"大象护符":10,"兔子面具":15,"白雾蜡烛":12,"守则铜章":22,"镇静药剂":8,"病历残页":10,"旧神雕像":28,"银色十字架":18 };
+
+    // 按热度排序展示热门游戏
+    function renderHotGames() {
+        const hotSorted = [...gamesLibrary].sort((a,b)=>b.heat - a.heat).slice(0,4);
+        const container = document.getElementById('hotGameGrid');
+        container.innerHTML = hotSorted.map(game => `
+            <div class="game-card" data-id="${game.id}">
+                <div class="card-img"><i class="fas ${game.icon}"></i></div>
+                <div class="card-info">
+                    <div class="card-title">${game.title}</div>
+                    <div class="card-desc">${game.short}</div>
+                    <div class="meta-row"><span class="echo-score"><i class="fas fa-fire"></i> ${game.heat} 回声热度</span><span class="free-tag">免费</span></div>
+                </div>
+            </div>
+        `).join('');
+        attachCardEvents();
+    }
+
+    function renderAllGames() {
+        const container = document.getElementById('allGameGrid');
+        container.innerHTML = gamesLibrary.map(game => `
+            <div class="game-card" data-id="${game.id}">
+                <div class="card-img"><i class="fas ${game.icon}"></i></div>
+                <div class="card-info">
+                    <div class="card-title">${game.title}</div>
+                    <div class="card-desc">${game.short}</div>
+                    <div class="meta-row"><span class="echo-score"><i class="fas fa-heart"></i> ${game.heat} 回声</span><span class="free-tag">免费</span></div>
+                </div>
+            </div>
+        `).join('');
+        attachCardEvents();
+    }
+
+    function attachCardEvents() {
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const id = parseInt(card.getAttribute('data-id'));
+                openGameModal(id);
+            });
+        });
+    }
+
+    function renderTrendingSidebar() {
+        const sorted = [...gamesLibrary].sort((a,b)=>b.heat - a.heat).slice(0,5);
+        const container = document.getElementById('trendingList');
+        container.innerHTML = sorted.map(g => `<div class="trend-item"><span><i class="fas ${g.icon}"></i> ${g.title}</span><span class="trend-score">🔥 ${g.heat}</span></div>`).join('');
+    }
+
+    let currentGame = null;
+    function openGameModal(gameId) {
+        const game = gamesLibrary.find(g => g.id === gameId);
+        if(!game) return;
+        currentGame = game;
+        document.getElementById('modalGameTitle').innerText = game.title;
+        document.getElementById('modalFullTitle').innerText = game.title;
+        document.getElementById('modalFullDesc').innerHTML = game.desc;
+        document.getElementById('modalRuleWarning').innerHTML = `<i class="fas fa-eye-slash"></i> ${game.rule}`;
+        document.getElementById('modalIcon').innerHTML = `<i class="fas ${game.icon}"></i>`;
+        const giftContainer = document.getElementById('modalGiftList');
+        const gifts = game.gifts || ["幽蓝夜灯","暗夜萤火"];
+        giftContainer.innerHTML = gifts.map(g => {
+            const price = giftPrice[g] || 8;
+            return `<div class="gift-item" data-gift="${g}" data-price="${price}"><i class="fas fa-gift"></i> ${g} ¥${price}</div>`;
+        }).join('');
+        document.querySelectorAll('.gift-item').forEach(el => {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('.gift-item').forEach(i=>i.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('customAmount').value = '';
+            });
+        });
+        document.getElementById('gameModal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('gameModal').style.display = 'none'; }
+
+    // 打赏逻辑 完全自愿
+    function doReward() {
+        let amount = 0;
+        let selectedGift = null;
+        const activeGift = document.querySelector('.gift-item.active');
+        const customVal = document.getElementById('customAmount').value;
+        if(activeGift) {
+            selectedGift = activeGift.getAttribute('data-gift');
+            amount = parseFloat(activeGift.getAttribute('data-price'));
+        } else if(customVal && !isNaN(parseFloat(customVal)) && parseFloat(customVal) > 0) {
+            amount = parseFloat(customVal);
+            selectedGift = `自定义打赏 ¥${amount}`;
+        } else {
+            alert('请选择礼物或输入自定义金额 (自愿支持)');
+            return;
+        }
+        alert(`🎁 感谢您的回声馈赠！\n游戏：《${currentGame.title}》\n礼物/金额：${selectedGift} ¥${amount.toFixed(2)}\n您的支持将全部用于怪谈创作者。`);
+        document.querySelectorAll('.gift-item').forEach(el=>el.classList.remove('active'));
+        document.getElementById('customAmount').value = '';
+    }
+
+    window.onload = () => {
+        renderHotGames();
+        renderAllGames();
+        renderTrendingSidebar();
+        document.getElementById('closeModalBtn').onclick = closeModal;
+        document.getElementById('doRewardBtn').onclick = doReward;
+        document.getElementById('modalPlayBtn').onclick = () => {
+            alert(`《${currentGame?.title}》免费启动，祝您遵循规则，逃出回声。`);
+            closeModal();
+        };
+        window.onclick = (e) => { if(e.target === document.getElementById('gameModal')) closeModal(); };
+        document.getElementById('heroExploreBtn').onclick = () => { document.querySelector('.section-head').scrollIntoView({behavior:'smooth'}); };
+        document.getElementById('supportBtn').onclick = () => alert("【回声秘典】自愿支持礼包：包含电子设定集+角色原画。所有收入用于平台与发展，感谢理解！");
+        document.querySelector('.login-btn').onclick = () => alert("登录社区后可收藏游戏，并为喜欢的规则怪谈投票。");
+        document.getElementById('moreHotLink')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('hotGameGrid').scrollIntoView({behavior:'smooth'}); });
+    };
+</script>
+</body>
+</html>
