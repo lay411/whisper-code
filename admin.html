@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhisperCode 后台管理</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #1b2838; color: #ccc; }
+        .container { max-width: 800px; margin: 0 auto; background: #16202d; padding: 20px; border-radius: 8px; }
+        input, textarea { width: 100%; padding: 8px; margin: 8px 0; background: #0f1922; border: 1px solid #2c3e50; color: white; }
+        button { background: #5e9b3c; border: none; padding: 10px 20px; color: white; cursor: pointer; margin-top: 10px; }
+        hr { margin: 30px 0; border-color: #2c3e50; }
+        .game-item, .upcoming-item { background: #0f1a24; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .delete-btn { background: #a55; margin-left: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>WhisperCode 后台管理</h1>
+    <div>
+        <label>Supabase URL:</label><input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
+        <label>Anon Public Key (可发布密钥):</label><input type="password" id="anonKey" placeholder="sb_publishable_...">
+        <button id="initBtn">初始化连接</button>
+    </div>
+    <div id="adminPanel" style="display: none;">
+        <hr><h2>发布新游戏</h2>
+        <form id="gameForm">
+            <input type="text" id="title" placeholder="游戏名称" required>
+            <textarea id="desc" placeholder="游戏描述" rows="2"></textarea>
+            <input type="text" id="rule" placeholder="规则警告文字">
+            <input type="text" id="icon" placeholder="图标 emoji (如 🎮)" value="🎮">
+            <input type="text" id="filePath" placeholder="游戏文件路径 (如 /games/demo.html)" required>
+            <input type="date" id="publishDate">
+            <button type="submit">发布游戏</button>
+        </form>
+        <hr><h2>现有游戏</h2><div id="gameList"></div>
+        <hr><h2>添加新游预告</h2>
+        <form id="upcomingForm">
+            <input type="text" id="upTitle" placeholder="预告游戏名称" required>
+            <textarea id="upDesc" placeholder="描述" rows="2"></textarea>
+            <input type="text" id="upIcon" placeholder="图标 emoji" value="✨">
+            <input type="date" id="upReleaseDate">
+            <button type="submit">添加预告</button>
+        </form>
+        <h2>现有预告</h2><div id="upcomingList"></div>
+    </div>
+</div>
+<script>
+    let supabaseClient = null;
+
+    document.getElementById('initBtn').onclick = async () => {
+        const url = document.getElementById('supabaseUrl').value;
+        const key = document.getElementById('anonKey').value;
+        if (!url || !key) { alert('请填写 URL 和 Anon Key'); return; }
+        
+        supabaseClient = window.supabase.createClient(url, key);
+        
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        
+        if (error || !user) {
+            alert('连接成功，但您尚未登录。请先在首页登录后再使用后台管理功能。');
+            document.getElementById('adminPanel').style.display = 'block';
+        } else {
+            alert('连接成功！当前登录用户：' + user.email);
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+        
+        loadGames();
+        loadUpcoming();
+    };
+
+    async function getCurrentUser() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        return user;
+    }
+
+    async function loadGames() {
+        const user = await getCurrentUser();
+        if (!user) {
+            document.getElementById('gameList').innerHTML = '<p>请先登录后再管理游戏</p>';
+            return;
+        }
+        const { data, error } = await supabaseClient.from('games').select('*').order('id');
+        if (error) { console.error(error); return; }
+        const container = document.getElementById('gameList');
+        container.innerHTML = data.map(g => `<div class="game-item"><strong>${g.title}</strong> - 路径: ${g.file_path || '无'} <button class="delete-btn" data-id="${g.id}" data-type="game">删除</button></div>`).join('');
+        document.querySelectorAll('.delete-btn[data-type="game"]').forEach(btn => { btn.onclick = async () => { if(confirm('确定删除？')){ await supabaseClient.from('games').delete().eq('id', btn.dataset.id); loadGames(); } }; });
+    }
+
+    async function loadUpcoming() {
+        const { data, error } = await supabaseClient.from('upcoming_games').select('*').order('release_date');
+        if (error) return;
+        const container = document.getElementById('upcomingList');
+        container.innerHTML = data.map(u => `<div class="upcoming-item"><strong>${u.title}</strong> - 上线: ${u.release_date || '待定'} <button class="delete-btn" data-id="${u.id}" data-type="upcoming">删除</button></div>`).join('');
+        document.querySelectorAll('.delete-btn[data-type="upcoming"]').forEach(btn => { btn.onclick = async () => { if(confirm('删除此预告？')){ await supabaseClient.from('upcoming_games').delete().eq('id', btn.dataset.id); loadUpcoming(); } }; });
+    }
+
+    document.getElementById('gameForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const user = await getCurrentUser();
+        if (!user) { alert('请先登录后再发布游戏'); return; }
+        const title = document.getElementById('title').value, description = document.getElementById('desc').value, rule = document.getElementById('rule').value, icon_emoji = document.getElementById('icon').value, file_path = document.getElementById('filePath').value, publish_date = document.getElementById('publishDate').value;
+        const { error } = await supabaseClient.from('games').insert({ title, description, rule, icon_emoji, file_path, publish_date });
+        if (error) alert('发布失败：' + error.message); else { alert('发布成功'); loadGames(); }
+    };
+
+    document.getElementById('upcomingForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const user = await getCurrentUser();
+        if (!user) { alert('请先登录后再添加预告'); return; }
+        const title = document.getElementById('upTitle').value, description = document.getElementById('upDesc').value, icon_emoji = document.getElementById('upIcon').value, release_date = document.getElementById('upReleaseDate').value;
+        const { error } = await supabaseClient.from('upcoming_games').insert({ title, description, icon_emoji, release_date });
+        if (error) alert('添加失败：' + error.message); else { alert('添加成功'); loadUpcoming(); }
+    };
+</script>
+</body>
+</html>
