@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>游戏详情 - WhisperCode</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #1b2838; font-family: 'Motiva Sans', sans-serif; color: #c7d5e0; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; background: #16202d; border-radius: 8px; padding: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #8f98a0; text-decoration: none; }
+        .game-header { display: flex; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; }
+        .game-icon { font-size: 80px; background: #0f1922; border-radius: 12px; padding: 20px; text-align: center; min-width: 120px; }
+        .game-info { flex: 1; }
+        .game-title { font-size: 32px; font-weight: 700; margin-bottom: 15px; }
+        .game-desc { background: #0f1922; padding: 16px; border-radius: 8px; margin-bottom: 20px; line-height: 1.5; }
+        .rule-box { background: #251a1f; border-left: 4px solid #d9534f; padding: 12px; border-radius: 8px; margin: 20px 0; }
+        .btn-play { background: #5e9b3c; border: none; padding: 12px 32px; border-radius: 4px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 30px; }
+        .section { margin: 30px 0; border-top: 1px solid #2c3e50; padding-top: 20px; }
+        .section h3 { margin-bottom: 15px; font-size: 20px; }
+        .comment-item { background: #0f1a24; padding: 12px; margin-bottom: 10px; border-radius: 8px; }
+        .comment-meta { font-size: 12px; color: #8f98a0; margin-bottom: 6px; }
+        .speedrun-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .speedrun-table th, .speedrun-table td { padding: 8px; text-align: left; border-bottom: 1px solid #2c3e50; }
+        input, textarea { background: #0f1922; border: 1px solid #5a6e7e; padding: 8px; border-radius: 8px; color: white; width: 100%; margin: 8px 0; }
+        button { background: #30653b; border: none; padding: 8px 16px; border-radius: 4px; color: white; cursor: pointer; }
+        .delete-btn { background: #7e4a2e; margin-left: 10px; padding: 2px 8px; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="back-link">← 返回首页</a>
+    <div id="gameContent"></div>
+</div>
+
+<script>
+    // ========== Supabase 配置（已填好） ==========
+    const SUPABASE_URL = 'https://sceakvqbgqhlnzlzufeu.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_IHKmIla-m-hlncApQ5KFzQ_V5VFZ..';
+    // =============================================
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('id');
+    let currentUser = null;
+    let currentGame = null;
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    async function loadGame() {
+        const { data, error } = await supabase.from('games').select('*').eq('id', gameId).single();
+        if (error) { document.getElementById('gameContent').innerHTML = '<p>游戏不存在</p>'; return; }
+        currentGame = data;
+        renderGameInfo();
+        loadComments();
+        loadSpeedrunRanking();
+        checkAuth();
+    }
+
+    function renderGameInfo() {
+        const html = `
+            <div class="game-header">
+                <div class="game-icon">${currentGame.icon_emoji || '🎮'}</div>
+                <div class="game-info">
+                    <div class="game-title">${escapeHtml(currentGame.title)}</div>
+                    <div class="game-desc">${escapeHtml(currentGame.description || '暂无描述')}</div>
+                    <div class="rule-box"><i class="fas fa-eye-slash"></i> ${escapeHtml(currentGame.rule || '遵守规则，方可安全返回')}</div>
+                    <button class="btn-play" id="playBtn">🎮 开始游戏</button>
+                </div>
+            </div>
+            <div class="section"><h3>💬 评论区</h3><div id="commentSection"></div><div id="commentForm"></div></div>
+            <div class="section"><h3>⏱️ 速通排行榜 (最快通关时间)</h3><table class="speedrun-table"><thead><tr><th>玩家</th><th>用时(秒)</th></tr></thead><tbody id="speedrunTbody"></tbody></table><div id="speedrunForm"></div></div>
+        `;
+        document.getElementById('gameContent').innerHTML = html;
+        document.getElementById('playBtn').onclick = () => {
+            if (currentGame.file_path) window.location.href = currentGame.file_path;
+            else alert('游戏文件尚未上传');
+        };
+    }
+
+    async function loadComments() {
+        const { data, error } = await supabase.from('comments').select('*').eq('game_id', gameId).order('created_at', { ascending: false });
+        if (error) return;
+        const container = document.getElementById('commentSection');
+        if (!container) return;
+        container.innerHTML = data.map(c => `
+            <div class="comment-item">
+                <div class="comment-meta">${c.user_id.slice(0,8)}... · ${new Date(c.created_at).toLocaleString()}</div>
+                <div>${escapeHtml(c.content)}</div>
+                ${currentUser && c.user_id === currentUser.id ? `<button class="delete-btn" data-id="${c.id}">删除</button>` : ''}
+            </div>
+        `).join('');
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.onclick = async () => {
+                await supabase.from('comments').delete().eq('id', btn.dataset.id);
+                loadComments();
+            };
+        });
+    }
+
+    async function postComment(content) {
+        if (!currentUser) { alert('请先登录'); return; }
+        const { error } = await supabase.from('comments').insert({ game_id: gameId, user_id: currentUser.id, content });
+        if (error) alert('评论失败：' + error.message);
+        else {
+            await supabase.rpc('add_points', { p_user_id: currentUser.id, p_points: 2 });
+            loadComments();
+            document.getElementById('commentText').value = '';
+        }
+    }
+
+    async function loadSpeedrunRanking() {
+        const { data, error } = await supabase.from('speedrun').select('user_id, finish_time_seconds').eq('game_id', gameId).order('finish_time_seconds', { ascending: true }).limit(10);
+        if (error) return;
+        const tbody = document.getElementById('speedrunTbody');
+        if (!tbody) return;
+        tbody.innerHTML = data.map(s => `<td><td>${s.user_id.slice(0,8)}...</td><td>${s.finish_time_seconds} 秒</td></tr>`).join('');
+    }
+
+    async function submitSpeedrun(seconds) {
+        if (!currentUser) { alert('请先登录'); return; }
+        const { error } = await supabase.from('speedrun').upsert({
+            game_id: gameId,
+            user_id: currentUser.id,
+            finish_time_seconds: seconds,
+            verified: false
+        }, { onConflict: 'game_id, user_id' });
+        if (error) alert('提交失败：' + error.message);
+        else {
+            await supabase.rpc('add_points', { p_user_id: currentUser.id, p_points: 10 });
+            alert('成绩已记录！');
+            loadSpeedrunRanking();
+        }
+    }
+
+    function checkAuth() {
+        supabase.auth.getSession().then(({ data }) => {
+            currentUser = data.session?.user || null;
+            const commentFormDiv = document.getElementById('commentForm');
+            const speedrunFormDiv = document.getElementById('speedrunForm');
+            if (currentUser) {
+                commentFormDiv.innerHTML = `<textarea id="commentText" rows="2" placeholder="写下你的评论..."></textarea><button id="submitCommentBtn">发布评论</button>`;
+                speedrunFormDiv.innerHTML = `<input type="number" id="speedrunSeconds" placeholder="通关秒数" min="1"><button id="submitSpeedrunBtn">提交我的成绩</button>`;
+                document.getElementById('submitCommentBtn').onclick = () => postComment(document.getElementById('commentText').value);
+                document.getElementById('submitSpeedrunBtn').onclick = () => submitSpeedrun(parseInt(document.getElementById('speedrunSeconds').value));
+            } else {
+                commentFormDiv.innerHTML = '<p><a href="#" id="loginLink">登录</a> 后参与评论和速通榜</p>';
+                speedrunFormDiv.innerHTML = '<p>登录后可提交你的通关时间</p>';
+                document.getElementById('loginLink')?.addEventListener('click', (e) => { e.preventDefault(); showLoginModal(); });
+            }
+        });
+        supabase.auth.onAuthStateChange((_, session) => {
+            currentUser = session?.user || null;
+            if (currentUser) location.reload();
+        });
+    }
+
+    function showLoginModal() {
+        const email = prompt('邮箱');
+        if (!email) return;
+        const pwd = prompt('密码(至少6位)');
+        if (!pwd || pwd.length < 6) return alert('密码太短');
+        supabase.auth.signUp({ email, password: pwd })
+            .then(({ error }) => {
+                if (error && error.message.includes('already')) {
+                    return supabase.auth.signInWithPassword({ email, password: pwd });
+                } else if (error) alert('注册失败');
+                else alert('注册成功，请登录');
+            }).catch(console.error);
+    }
+
+    loadGame();
+</script>
+</body>
+</html>
